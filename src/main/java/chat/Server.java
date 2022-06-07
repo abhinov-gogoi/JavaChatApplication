@@ -6,11 +6,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MeterServer extends Thread {
+public class Server extends Thread {
     private final int serverPort;
     private ArrayList<ClientHandler> workerList = new ArrayList<>();
 
-    public MeterServer(int serverPort) {
+    public Server(int serverPort) {
         this.serverPort = serverPort;
     }
 
@@ -32,7 +32,6 @@ public class MeterServer extends Thread {
             }
         } catch (IOException e) {
             System.out.println("Something went wrong");
-//            e.printStackTrace();
         }
     }
 

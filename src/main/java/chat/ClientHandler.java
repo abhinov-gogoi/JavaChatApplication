@@ -12,7 +12,7 @@ import java.util.UUID;
 public class ClientHandler extends Thread {
 
     private final Socket clientSocket;
-    private final MeterServer server;
+    private final Server server;
     private String login = null;
     private OutputStream outputStream;
     private HashSet<String> topicSet = new HashSet<>();
@@ -24,7 +24,7 @@ public class ClientHandler extends Thread {
     private boolean isLoggedIn = false;
     private boolean isBroadcasting = false;
 
-    public ClientHandler(MeterServer server, Socket clientSocket) throws IOException {
+    public ClientHandler(Server server, Socket clientSocket) throws IOException {
         this.server = server;
         this.clientSocket = clientSocket;
 
