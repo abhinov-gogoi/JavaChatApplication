@@ -27,7 +27,6 @@ public class ClientHandler extends Thread {
     public ClientHandler(Server server, Socket clientSocket) throws IOException {
         this.server = server;
         this.clientSocket = clientSocket;
-
         // for auto login with UUID
         autoLogin();
     }
@@ -127,11 +126,11 @@ public class ClientHandler extends Thread {
     }
 
     private void broadcastMessage(String body) throws IOException {
-        List<ClientHandler> workerList = server.getWorkerList();
-        for(ClientHandler worker : workerList) {
-            if (!login.equalsIgnoreCase(worker.getLogin())) {
+        List<ClientHandler> clients = server.getClients();
+        for(ClientHandler client : clients) {
+            if (!login.equalsIgnoreCase(client.getLogin())) {
                 String outMsg = "--> Broadcast received from " + login + " : " + body + "\n";
-                worker.send(outMsg);
+                client.send(outMsg);
             }
         }
     }
@@ -165,15 +164,15 @@ public class ClientHandler extends Thread {
 
     private void directMessage(String body) throws IOException {
 
-        List<ClientHandler> workerList = server.getWorkerList();
-        for(ClientHandler worker : workerList) {
-            if (directlyConnectedUser.equalsIgnoreCase(worker.getLogin())) {
+        List<ClientHandler> clients = server.getClients();
+        for(ClientHandler client : clients) {
+            if (directlyConnectedUser.equalsIgnoreCase(client.getLogin())) {
                 // if some user1 connects with another user2, then the other user2 also directly connects with this user1
-                OutputStream worker_ops = worker.outputStream;
-                worker.connect(worker_ops, login);
+                OutputStream client_ops = client.outputStream;
+                client.connect(client_ops, login);
 
                 String outMsg = "--> Message received from " + login + " : " + body + "\n";
-                worker.send(outMsg);
+                client.send(outMsg);
 
             }
         }
@@ -206,30 +205,30 @@ public class ClientHandler extends Thread {
 
         boolean isTopic = sendTo.charAt(0) == '#';
 
-        List<ClientHandler> workerList = server.getWorkerList();
-        for(ClientHandler worker : workerList) {
+        List<ClientHandler> clients = server.getClients();
+        for(ClientHandler client : clients) {
             if (isTopic) {
-                if (worker.isMemberOfTopic(sendTo)) {
+                if (client.isMemberOfTopic(sendTo)) {
                     String outMsg = "msg " + sendTo + ":" + login + " " + body + "\n";
-                    worker.send(outMsg);
+                    client.send(outMsg);
                 }
             } else {
-                if (sendTo.equalsIgnoreCase(worker.getLogin())) {
+                if (sendTo.equalsIgnoreCase(client.getLogin())) {
                     String outMsg = "msg received from " + login + " : " + body + "\n";
-                    worker.send(outMsg);
+                    client.send(outMsg);
                 }
             }
         }
     }
 
     private void handleLogoff() throws IOException {
-        server.removeWorker(this);
-        List<ClientHandler> workerList = server.getWorkerList();
+        server.removeClient(this);
+        List<ClientHandler> clients = server.getClients();
 
         String onlineMsg = "... "+login+" has left the chat ...\n";
-        for(ClientHandler worker : workerList) {
-            if (!login.equals(worker.getLogin())) {
-                worker.send(onlineMsg);
+        for(ClientHandler client : clients) {
+            if (!login.equals(client.getLogin())) {
+                client.send(onlineMsg);
             }
         }
         clientSocket.close();
@@ -248,11 +247,11 @@ public class ClientHandler extends Thread {
         if (tokens.length == 2) {
             String username = tokens[1];
 
-            List<ClientHandler> workerList = server.getWorkerList();
+            List<ClientHandler> clients = server.getClients();
 
             // check if another is logged in with same name
-            for(ClientHandler worker : workerList) {
-                if (username.equals(worker.getLogin())) {
+            for(ClientHandler client : clients) {
+                if (username.equals(client.getLogin())) {
                     String exists = "A user already exists with that username\n";
                     outputStream.write(exists.getBytes());
                     showAllUsers(outputStream);
@@ -269,19 +268,19 @@ public class ClientHandler extends Thread {
             System.out.println("User logged in successfully: " + username);
 
             // show list of online users to this usernames
-            for(ClientHandler worker : workerList) {
-                if (worker.getLogin() != null) {
-                    if (!username.equals(worker.getLogin())) {
-                        String msg2 = "Users online : " + worker.getLogin() + "\n";
+            for(ClientHandler client : clients) {
+                if (client.getLogin() != null) {
+                    if (!username.equals(client.getLogin())) {
+                        String msg2 = "Users online : " + client.getLogin() + "\n";
                         send(msg2);
                     }
                 }
             }
 
             String onlineMsg = "A new user joined the server : " + username + "\n";
-            for(ClientHandler worker : workerList) {
-                if (!username.equals(worker.getLogin())) {
-                    worker.send(onlineMsg);
+            for(ClientHandler client : clients) {
+                if (!username.equals(client.getLogin())) {
+                    client.send(onlineMsg);
                 }
             }
         }
@@ -304,19 +303,19 @@ public class ClientHandler extends Thread {
     }
 
     void showOnlineUsers(OutputStream outputStream) throws IOException {
-        List<ClientHandler> workerList = server.getWorkerList();
-        System.out.println("workerList : "+workerList);
+        List<ClientHandler> clients = server.getClients();
+        System.out.println("clients : "+clients);
 
-        if (workerList.size()<=1) {
+        if (clients.size()<=1) {
             String msg = "No other users are connected\n";
             outputStream.write(msg.getBytes());
             return;
         }
 
-        for(ClientHandler worker : workerList) {
-            if (worker.getLogin() != null) {
-                if (!login.equals(worker.getLogin())) {
-                    String msg2 = "Users online : " + worker.getLogin() + "\n";
+        for(ClientHandler client : clients) {
+            if (client.getLogin() != null) {
+                if (!login.equals(client.getLogin())) {
+                    String msg2 = "Users online : " + client.getLogin() + "\n";
                     send(msg2);
                 }
             }
